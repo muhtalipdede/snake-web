@@ -6,7 +6,7 @@ const SnakeGame = () => {
   const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
   const [food, setFood] = useState({ x: 15, y: 15 });
   const [direction, setDirection] = useState({ x: 0, y: 0 });
-  const [speed, setSpeed] = useState(100);
+  const [speed] = useState(100);
   const [score, setScore] = useState(0);
   const gridSize = 20;
   const tileCount = 30;
@@ -80,8 +80,9 @@ const SnakeGame = () => {
   }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current as any;
+    const canvas = canvasRef.current as unknown as HTMLCanvasElement;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw snake
