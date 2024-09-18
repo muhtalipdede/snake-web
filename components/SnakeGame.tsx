@@ -10,6 +10,8 @@ const SnakeGame = () => {
   const [score, setScore] = useState(0);
   const gridSize = 20;
   const tileCount = 30;
+  const [touchStart, setTouchStart] = useState({ x: 0, y: 0 });
+  const [touchEnd, setTouchEnd] = useState({ x: 0, y: 0 });
 
   const handleKeyDown = (e: KeyboardEvent) => {
     switch (e.key) {
@@ -28,24 +30,56 @@ const SnakeGame = () => {
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    setTouchStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    setTouchEnd({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    console.log('touchEnd', e);
+    const deltaX = touchEnd.x - touchStart.x;
+    const deltaY = touchEnd.y - touchStart.y;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // yatay kaydırma
+      if (deltaX > 0) {
+        setDirection({ x: 1, y: 0 }); // sağa
+      } else {
+        setDirection({ x: -1, y: 0 }); // sola
+      }
+    } else {
+      // dikey kaydırma
+      if (deltaY > 0) {
+        setDirection({ x: 0, y: 1 }); // aşağı
+      } else {
+        setDirection({ x: 0, y: -1 }); // yukarı
+      }
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setSnake((prevSnake) => {
         const newSnake = [...prevSnake];
         const head = { x: newSnake[0].x + direction.x, y: newSnake[0].y + direction.y };
 
-        // Check collision with walls
+        // Duvarlarla çarpışmayı kontrol et
         // if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-        //   alert(`Game Over! Your score: ${score}`);
+        //   alert(`Oyun Bitti! Skorunuz: ${score}`);
         //   setSnake([{ x: 10, y: 10 }]);
         //   setDirection({ x: 0, y: 0 });
         //   setScore(0);
         //   return [{ x: 10, y: 10 }];
         // }
 
-        // Check collision with self
+        // Kendine çarpışmayı kontrol et
         // if (newSnake.some((segment) => segment.x === head.x && segment.y === head.y)) {
-        //   alert(`Game Over! Your score: ${score}`);
+        //   alert(`Oyun Bitti! Skorunuz: ${score}`);
         //   setSnake([{ x: 10, y: 10 }]);
         //   setDirection({ x: 0, y: 0 });
         //   setScore(0);
@@ -54,7 +88,6 @@ const SnakeGame = () => {
 
         newSnake.unshift(head);
 
-        // Check if food is eaten
         if (head.x === food.x && head.y === food.y) {
           setFood({
             x: Math.floor(Math.random() * tileCount),
@@ -85,21 +118,24 @@ const SnakeGame = () => {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw snake
     ctx.fillStyle = 'green';
     snake.forEach((segment) => {
       ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
     });
 
-    // Draw food
     ctx.fillStyle = 'red';
     ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
   }, [snake, food]);
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div
+      style={{ textAlign: 'center' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <h1>Snake Game</h1>
-      <p>Score: {score}</p>
+      <p>Skor: {score}</p>
       <canvas
         ref={canvasRef}
         width={gridSize * tileCount}
